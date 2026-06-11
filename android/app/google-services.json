@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "740423556188",
+    "project_id": "crown-cuts-babershop",
+    "storage_bucket": "crown-cuts-babershop.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:740423556188:android:e68e67a2ca3c57ca649a99",
+        "android_client_info": {
+          "package_name": "com.crowncuts.crown_cuts"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9AXcN8hB9i8brqpAPpFiDXvdxgfztWq0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

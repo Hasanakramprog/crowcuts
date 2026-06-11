@@ -1,0 +1,101 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // USERS — Each user manages their own profile; admin reads all
+    // ─────────────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == userId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      // Create: only the user themselves (registration flow)
+      allow create: if request.auth != null &&
+        request.auth.uid == userId;
+      // Update: own profile or admin
+      allow update: if request.auth != null && (
+        request.auth.uid == userId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      allow delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SERVICES — Readable by all authenticated; admin manages
+    // ─────────────────────────────────────────────────────────────────────────
+    match /services/{serviceId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BARBERS — Readable by all authenticated; admin manages
+    // ─────────────────────────────────────────────────────────────────────────
+    match /barbers/{barberId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BOOKINGS — Customers own their bookings; barbers see assigned; admin all
+    // ─────────────────────────────────────────────────────────────────────────
+    match /bookings/{bookingId} {
+      allow read: if request.auth != null && (
+        resource.data.customerId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.barberId == resource.data.barberId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      // Customers create their own bookings
+      allow create: if request.auth != null &&
+        request.resource.data.customerId == request.auth.uid;
+      // Barbers can update status (and optionally cancellationReason) of assigned bookings
+      allow update: if request.auth != null && (
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'barber' &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancellationReason']) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.barberId == resource.data.barberId) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      allow delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // RATINGS — Readable by all; customers create their own; immutable
+    // ─────────────────────────────────────────────────────────────────────────
+    match /ratings/{ratingId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null &&
+        request.resource.data.customerId == request.auth.uid &&
+        request.resource.data.stars >= 1.0 &&
+        request.resource.data.stars <= 5.0;
+      allow update: if false;      // immutable
+      allow delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // INCOME RECORDS — Admin reads all; barbers read own; admin/barber/customer create
+    // ─────────────────────────────────────────────────────────────────────────
+    match /incomeRecords/{recordId} {
+      allow read: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        resource.data.barberId ==
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.barberId
+      );
+      allow create: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'barber' &&
+         request.resource.data.barberId ==
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.barberId) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'customer'
+      ) &&
+        request.resource.data.keys().hasAll(['bookingId', 'barberId', 'amount', 'date']);
+      allow update, delete: if false;   // immutable
+    }
+  }
+}
