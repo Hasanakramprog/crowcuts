@@ -184,7 +184,7 @@ class BookingConfirmationScreen extends ConsumerWidget {
                   id: bookingId,
                   customerId: user.id,
                   customerName: user.name,
-                  customerPhone: user.phone,
+                  customerPhone: user.phone ?? '',
                   barberId: barber.id,
                   serviceIds: services.map((s) => s.serviceId).toList(),
                   serviceNames: services.map((s) => s.name).toList(),

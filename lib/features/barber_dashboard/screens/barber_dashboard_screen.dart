@@ -162,6 +162,12 @@ class _BarberHeader extends ConsumerWidget {
             tooltip: 'Toggle Theme',
           ),
           IconButton(
+            onPressed: () => context.push(AppRoutes.barberSettings),
+            icon: const Icon(Icons.settings_rounded),
+            color: context.colors.textMuted,
+            tooltip: 'Settings',
+          ),
+          IconButton(
             onPressed: onLogout,
             icon: const Icon(Icons.logout_rounded),
             color: context.colors.textMuted,

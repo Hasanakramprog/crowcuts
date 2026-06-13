@@ -7,6 +7,7 @@ import '../../data/models/models.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
+import '../../features/auth/screens/phone_number_input_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/booking/screens/barber_selection_screen.dart';
 import '../../features/booking/screens/time_slot_screen.dart';
@@ -18,6 +19,7 @@ import '../../features/ratings/screens/rating_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/barber_dashboard/screens/barber_dashboard_screen.dart';
 import '../../features/barber_dashboard/screens/appointment_detail_screen.dart';
+import '../../features/barber_dashboard/screens/barber_settings_screen.dart';
 import '../../features/admin/screens/admin_home_screen.dart';
 import '../../features/admin/screens/barber_list_screen.dart';
 import '../../features/admin/screens/edit_barber_screen.dart';
@@ -32,6 +34,7 @@ class AppRoutes {
   static const splash = '/';
   static const login = '/login';
   static const register = '/register';
+  static const phoneInput = '/phone-input';
 
   // Customer
   static const customerHome = '/customer/home';
@@ -49,6 +52,7 @@ class AppRoutes {
   static const barberAppointmentDetail = '/barber/appointment/:bookingId';
   static const barberEarnings = '/barber/earnings';
   static const barberReviews = '/barber/reviews';
+  static const barberSettings = '/barber/settings';
 
   // Admin
   static const adminHome = '/admin';
@@ -87,8 +91,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutes.login;
       }
 
-      // Authenticated on splash → go to role home
+      // Authenticated on splash → check phone, then go to role home
       if (isAuthenticated && state.matchedLocation == AppRoutes.splash) {
+        // Google sign-in users need to add phone before accessing app
+        if (!authState.user!.hasPhone) {
+          return AppRoutes.phoneInput;
+        }
+        return _roleHome(authState.user!.role);
+      }
+
+      // Authenticated without phone → redirect to phone input (except if already there)
+      if (isAuthenticated && 
+          !authState.user!.hasPhone && 
+          state.matchedLocation != AppRoutes.phoneInput) {
+        return AppRoutes.phoneInput;
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // PREVENT BACK NAVIGATION TO AUTH SCREENS AFTER LOGIN
+      // ═══════════════════════════════════════════════════════════════════════
+      // Authenticated users trying to access login/register → redirect to home
+      if (isAuthenticated && 
+          (state.matchedLocation == AppRoutes.login || 
+           state.matchedLocation == AppRoutes.register)) {
         return _roleHome(authState.user!.role);
       }
 
@@ -114,6 +139,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.phoneInput,
+        builder: (context, state) => const PhoneNumberInputScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const PhoneNumberInputScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        ),
       ),
 
       // Customer routes
@@ -234,6 +270,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => AppointmentDetailScreen(
           bookingId: state.pathParameters['bookingId']!,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.barberSettings,
+        builder: (context, state) => const BarberSettingsScreen(),
       ),
 
       // Admin routes

@@ -61,12 +61,12 @@ class BarberNotifier extends StateNotifier<List<BarberModel>> {
     }
   }
 
-  void updateBarber(BarberModel updated) {
-    _repo.setBarber(updated);
+  Future<void> updateBarber(BarberModel updated) async {
+    await _repo.setBarber(updated);
   }
 
-  void addBarber(BarberModel barber) {
-    _repo.setBarber(barber);
+  Future<void> addBarber(BarberModel barber) async {
+    await _repo.setBarber(barber);
   }
 
   void toggleActive(String id) {

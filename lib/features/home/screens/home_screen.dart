@@ -103,7 +103,7 @@ class HomeScreen extends ConsumerWidget {
                       style: AppTypography.heading1,
                     ).animate(delay: 350.ms).fadeIn(duration: 500.ms),
                     TextButton.icon(
-                      onPressed: () => context.go(AppRoutes.barberSelection),
+                      onPressed: () => context.push(AppRoutes.barberSelection),
                       icon: const Icon(Icons.arrow_forward, size: 16),
                       label: const Text('Book Now'),
                       style: TextButton.styleFrom(
@@ -130,7 +130,7 @@ class HomeScreen extends ConsumerWidget {
                       onTap: () {
                         ref.read(bookingFlowProvider.notifier).state =
                             BookingFlowState(selectedBarber: barbers[index]);
-                        context.go(AppRoutes.barberSelection);
+                        context.push(AppRoutes.barberSelection);
                       },
                     );
                   },
@@ -176,7 +176,7 @@ class HomeScreen extends ConsumerWidget {
                       icon: Icons.event_available_rounded,
                       label: 'Book Now',
                       color: AppColors.goldPrimary,
-                      onTap: () => context.go(AppRoutes.barberSelection),
+                      onTap: () => context.push(AppRoutes.barberSelection),
                       delay: 600,
                     ),
                     const SizedBox(width: 12),
@@ -466,33 +466,16 @@ class _BarberCardState extends State<_BarberCard> {
                         width: 2,
                       ),
                     ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Chair icon background
-                        Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: context.colors.surface2,
-                          ),
-                          child: Icon(
-                            Icons.chair_alt_rounded,
-                            size: 30,
-                            color: AppColors.goldPrimary.withAlpha(180),
-                          ),
-                        ),
-                        // Initials on top
-                        Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: context.colors.surface2.withAlpha(0),
-                          ),
-                        ),
-                      ],
+                    child: ClipOval(
+                      child: widget.barber.avatarUrl.isNotEmpty
+                          ? Image.network(
+                              widget.barber.avatarUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _HomeBarberInitial(
+                                name: widget.barber.name,
+                              ),
+                            )
+                          : _HomeBarberInitial(name: widget.barber.name),
                     ),
                   ),
 
@@ -800,6 +783,29 @@ class _CustomerBottomNav extends StatelessWidget {
             label: 'Profile',
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Fallback initials avatar for barber cards on the home screen
+class _HomeBarberInitial extends StatelessWidget {
+  final String name;
+  const _HomeBarberInitial({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'B';
+    return Container(
+      color: context.colors.surface2,
+      child: Center(
+        child: Text(
+          initial,
+          style: AppTypography.heading1.copyWith(
+            color: AppColors.goldPrimary,
+            fontSize: 26,
+          ),
+        ),
       ),
     );
   }

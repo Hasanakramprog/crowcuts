@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import 'firestore_provider.dart';
@@ -36,6 +37,15 @@ class FirebaseFirestoreRepository {
   /// Create or update a barber.
   Future<void> setBarber(BarberModel barber) async {
     await _db.collection('barbers').doc(barber.id).set(barber.toJson());
+  }
+
+  /// Patch only the avatarUrl field on a barber document.
+  /// Uses merge:true so it works whether the document exists or not.
+  Future<void> updateBarberAvatarUrl(String barberId, String avatarUrl) async {
+    await _db
+        .collection('barbers')
+        .doc(barberId)
+        .set({'avatarUrl': avatarUrl}, SetOptions(merge: true));
   }
 
   /// Update barber's isActive status.

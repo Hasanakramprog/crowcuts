@@ -116,6 +116,10 @@ class _BarberSelectionScreenState extends ConsumerState<BarberSelectionScreen> {
       backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Book Appointment'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go(AppRoutes.customerHome),
+        ),
         actions: [
           TextButton(
             onPressed: () => context.go(AppRoutes.customerHome),
@@ -373,38 +377,46 @@ class _ChairCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Chair icon with glow ring
+                // Barber avatar with glow ring
                 Stack(
                   alignment: Alignment.center,
                   children: [
                     if (isSelected)
                       Container(
-                        width: 80,
-                        height: 80,
+                        width: 84,
+                        height: 84,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.goldPrimary.withAlpha(15),
                         ),
                       ),
                     Container(
-                      width: 68,
-                      height: 68,
+                      width: 70,
+                      height: 70,
                       decoration: BoxDecoration(
-                        color: context.colors.surface2,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: isSelected
-                              ? AppColors.goldPrimary.withAlpha(150)
-                              : Colors.transparent,
-                          width: 2,
+                              ? AppColors.goldPrimary
+                              : context.colors.borderDefault,
+                          width: isSelected ? 2.5 : 1,
                         ),
                       ),
-                      child: Icon(
-                        Icons.chair_alt_rounded,
-                        size: 34,
-                        color: isSelected
-                            ? AppColors.goldPrimary
-                            : context.colors.textMuted,
+                      child: ClipOval(
+                        child: barber.avatarUrl.isNotEmpty
+                            ? Image.network(
+                                barber.avatarUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    _BarberInitialAvatar(
+                                      name: barber.name,
+                                      isSelected: isSelected,
+                                    ),
+                              )
+                            : _BarberInitialAvatar(
+                                name: barber.name,
+                                isSelected: isSelected,
+                              ),
                       ),
                     ),
                   ],
@@ -415,8 +427,8 @@ class _ChairCard extends StatelessWidget {
                   style: AppTypography.heading2.copyWith(
                     color: isSelected
                         ? (context.isDark
-                            ? AppColors.goldPrimary
-                            : context.colors.textPrimary)
+                              ? AppColors.goldPrimary
+                              : context.colors.textPrimary)
                         : context.colors.textMuted,
                     fontSize: 14,
                   ),
@@ -691,6 +703,36 @@ class _ServiceCard extends StatelessWidget {
                     ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Fallback avatar showing barber initials when no photo is available
+class _BarberInitialAvatar extends StatelessWidget {
+  final String name;
+  final bool isSelected;
+
+  const _BarberInitialAvatar({
+    required this.name,
+    this.isSelected = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'B';
+    return Container(
+      color: isSelected
+          ? AppColors.goldPrimary.withAlpha(30)
+          : context.colors.surface2,
+      child: Center(
+        child: Text(
+          initial,
+          style: AppTypography.heading1.copyWith(
+            color: isSelected ? AppColors.goldPrimary : context.colors.textMuted,
+            fontSize: 26,
+          ),
         ),
       ),
     );
