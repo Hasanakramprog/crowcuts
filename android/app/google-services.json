@@ -12,7 +12,20 @@
           "package_name": "com.crowncuts.crown_cuts"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "740423556188-7h0escgthr0ltl7t4dassv4lsd59l7oj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.crowncuts.crown_cuts",
+            "certificate_hash": "4082ad2213fa248482ca93ce098ebf7e51e51d61"
+          }
+        },
+        {
+          "client_id": "740423556188-6debcii10tmh2v0p9o78pnj7edl6dk09.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC9AXcN8hB9i8brqpAPpFiDXvdxgfztWq0"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "740423556188-6debcii10tmh2v0p9o78pnj7edl6dk09.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "740423556188-0b877eai1q036k8bvmnqec1q0hibic62.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.crowncuts.crownCuts"
+              }
+            }
+          ]
         }
       }
     }
