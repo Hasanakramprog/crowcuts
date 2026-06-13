@@ -45,5 +45,23 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<!-- REVERSED_CLIENT_ID from GoogleService-Info.plist — required for Google Sign-In OAuth redirect -->
+				<string>com.googleusercontent.apps.740423556188-0b877eai1q036k8bvmnqec1q0hibic62</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>To upload your profile photo</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>To save photos to your library</string>
+	<key>NSCameraUsageDescription</key>
+	<string>To take a profile photo</string>
 </dict>
 </plist>
