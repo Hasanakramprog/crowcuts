@@ -10,9 +10,10 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/router/app_router.dart';
 import '../../../data/providers/auth_provider.dart';
+import '../../../data/repositories/firebase_auth_repository.dart';
 import '../../../data/models/models.dart';
 
-/// Login Screen — Email + Password
+/// Login Screen — Email + Password + Google Sign-In
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -26,6 +27,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  bool _isGoogleLoading = false;
+  String? _googleError;
   late AnimationController _scissorsController;
   late Animation<double> _scissorsRotation;
 
@@ -78,6 +81,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             break;
         }
       }
+    }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    setState(() {
+      _isGoogleLoading = true;
+      _googleError = null;
+    });
+
+    try {
+      final authRepo = ref.read(firebaseAuthRepositoryProvider);
+      final user = await authRepo.signInWithGoogle();
+
+      if (mounted) {
+        // Check if user has phone number
+        if (!user.hasPhone) {
+          // Navigate to phone input screen
+          context.go(AppRoutes.phoneInput);
+        } else {
+          // Navigate to customer home
+          context.go(AppRoutes.customerHome);
+        }
+      }
+    } catch (e) {
+      // Guard against setState after dispose (widget navigated away during async operation)
+      if (!mounted) return;
+      setState(() {
+        _googleError = e.toString().contains('cancelled')
+            ? 'Google sign-in was cancelled'
+            : 'Failed to sign in with Google. Please try again.';
+        _isGoogleLoading = false;
+      });
     }
   }
 
@@ -199,7 +234,105 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       textAlign: TextAlign.center,
                     ).animate(delay: 300.ms).fadeIn(duration: 500.ms),
 
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
+
+                    // Google Sign-In Button
+                    OutlinedButton.icon(
+                      onPressed: _isGoogleLoading ? null : _loginWithGoogle,
+                      icon: _isGoogleLoading
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.goldPrimary,
+                                ),
+                              ),
+                            )
+                          : Image.network(
+                              'https://www.google.com/favicon.ico',
+                              width: 20,
+                              height: 20,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(
+                                Icons.g_mobiledata,
+                                size: 24,
+                                color: AppColors.goldPrimary,
+                              ),
+                            ),
+                      label: Text(
+                        _isGoogleLoading
+                            ? 'Signing in...'
+                            : 'Continue with Google',
+                        style: AppTypography.bodyBold.copyWith(
+                          color: c.textPrimary,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        backgroundColor: c.surface,
+                        side: BorderSide(color: c.borderDefault),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: AppRadius.inputBorder,
+                        ),
+                      ),
+                    ).animate(delay: 400.ms).fadeIn(duration: 400.ms).slideY(
+                          begin: 0.1,
+                          end: 0,
+                          curve: Curves.easeOutCubic,
+                        ),
+
+                    const SizedBox(height: 8),
+
+                    // Customer-only note
+                    Center(
+                      child: Text(
+                        'For customers only • Admins/Barbers use email',
+                        style: AppTypography.caption.copyWith(
+                          color: c.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ).animate(delay: 450.ms).fadeIn(duration: 400.ms),
+
+                    // Google sign-in error message
+                    if (_googleError != null) ...[ 
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.errorRed.withAlpha(20),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.errorRed.withAlpha(60),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 16,
+                              color: AppColors.errorRed,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _googleError!,
+                                style: AppTypography.caption.copyWith(
+                                  color: AppColors.errorRed,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 24),
 
                     // Divider
                     Row(
@@ -210,7 +343,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
-                            'or sign in manually',
+                            'or sign in with email',
                             style: AppTypography.caption.copyWith(
                               color: c.textMuted,
                               fontSize: 11,

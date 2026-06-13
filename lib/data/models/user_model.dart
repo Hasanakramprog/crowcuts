@@ -1,3 +1,6 @@
+/// Authentication provider enum
+enum AuthProvider { email, google }
+
 /// User role enum
 enum UserRole { customer, barber, admin }
 
@@ -5,20 +8,24 @@ enum UserRole { customer, barber, admin }
 class UserModel {
   final String id;
   final String name;
-  final String phone;
+  final String? phone; // Nullable for Google sign-in users who haven't added phone yet
   final String email;
   final UserRole role;
   final String? barberId; // set if role == barber
   final DateTime createdAt;
+  final AuthProvider authProvider; // Track how user signed in
+  final String? photoUrl; // Google profile photo URL
 
   const UserModel({
     required this.id,
     required this.name,
-    required this.phone,
+    this.phone,
     required this.email,
     required this.role,
     this.barberId,
     required this.createdAt,
+    this.authProvider = AuthProvider.email, // Default to email for existing users
+    this.photoUrl,
   });
 
   UserModel copyWith({
@@ -30,6 +37,9 @@ class UserModel {
     String? barberId,
     bool clearBarberId = false,
     DateTime? createdAt,
+    AuthProvider? authProvider,
+    String? photoUrl,
+    bool clearPhotoUrl = false,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -39,8 +49,13 @@ class UserModel {
       role: role ?? this.role,
       barberId: clearBarberId ? null : barberId ?? this.barberId,
       createdAt: createdAt ?? this.createdAt,
+      authProvider: authProvider ?? this.authProvider,
+      photoUrl: clearPhotoUrl ? null : photoUrl ?? this.photoUrl,
     );
   }
+
+  /// Check if user has phone number set
+  bool get hasPhone => phone != null && phone!.isNotEmpty;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -50,16 +65,25 @@ class UserModel {
         'role': role.name,
         'barberId': barberId,
         'createdAt': createdAt.toIso8601String(),
+        'authProvider': authProvider.name,
+        'photoUrl': photoUrl,
       };
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
         id: json['id'] as String,
         name: json['name'] as String,
-        phone: json['phone'] as String,
+        phone: json['phone'] as String?,
         email: json['email'] as String,
         role: UserRole.values.firstWhere((r) => r.name == json['role']),
         barberId: json['barberId'] as String?,
         createdAt: DateTime.parse(json['createdAt'] as String),
+        authProvider: json['authProvider'] != null
+            ? AuthProvider.values.firstWhere(
+                (a) => a.name == json['authProvider'],
+                orElse: () => AuthProvider.email,
+              )
+            : AuthProvider.email,
+        photoUrl: json['photoUrl'] as String?,
       );
 
   @override
@@ -71,5 +95,5 @@ class UserModel {
   int get hashCode => id.hashCode;
 
   @override
-  String toString() => 'UserModel(id: $id, name: $name, role: ${role.name})';
+  String toString() => 'UserModel(id: $id, name: $name, role: ${role.name}, provider: ${authProvider.name})';
 }

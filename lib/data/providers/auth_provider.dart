@@ -36,20 +36,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final FirebaseAuthRepository _authRepo;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-  AuthNotifier(this._authRepo) : super(const AuthState()) {
-    // Listen to Firebase auth state changes for auto-login
+  AuthNotifier(this._authRepo) : super(const AuthState(isLoading: true)) {
+    // Listen to Firebase auth state changes.
+    // Starts with isLoading: true so the splash screen waits for this
+    // to complete before deciding where to navigate — prevents login flash.
     _firebaseAuth.authStateChanges().listen((firebaseUser) async {
       try {
         if (firebaseUser != null) {
           final user = await _authRepo.getCurrentUser();
-          if (user != null && mounted) {
+          if (mounted) {
             state = state.copyWith(user: user, isLoading: false);
           }
         } else {
-          if (mounted) state = const AuthState();
+          // No session — user needs to log in
+          if (mounted) state = const AuthState(isLoading: false);
         }
       } catch (_) {
-        if (mounted) state = const AuthState();
+        if (mounted) state = const AuthState(isLoading: false);
       }
     });
   }
